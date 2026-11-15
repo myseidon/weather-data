@@ -32,6 +32,8 @@ for key, L in LOCATIONS.items():
     data = get("https://api.open-meteo.com/v1/forecast?" + q)
     out["locations"][key] = {"name": L["name"], "data": data}
 
+import os
+os.makedirs("data", exist_ok=True)
 with open("data/latest.json", "w", encoding="utf-8") as f:
     json.dump(out, f, ensure_ascii=False)
 print("ok", out["fetched_utc"])
