@@ -27,6 +27,11 @@ def kind(code, t, p):
     return "cloud"
 
 
+def t0(x):
+    x = float(x)
+    return "-" if x != x else f"{int(round(x)) + 0}"
+
+
 KOR = {"sun": "맑음", "partly": "구름조금", "cloud": "흐림", "rain": "비", "snow": "눈", "storm": "뇌우", "fog": "안개"}
 
 
@@ -99,18 +104,19 @@ for li, L in enumerate(d["locations"]):
 
     lo, hi = np.nanmin(tmean), np.nanmax(tmean)
     ax.text(0.55, H - 0.75, "◉ " + L["name"], fontsize=24, color="white", fontweight="bold", va="center")
-    ax.text(0.5, H - 2.05, f"{tmean[0]:.0f}°", fontsize=78, color="white", va="center", fontweight="normal")
+    ax.text(0.5, H - 2.05, f"{t0(tmean[0])}°", fontsize=78, color="white", va="center", fontweight="normal")
     icon(ax, W - 1.6, H - 2.0, kinds[0], s=1.3, night=night[0])
     ax.text(0.6, H - 3.35, KOR[kinds[0]], fontsize=22, color="white", fontweight="bold", va="center")
-    ax.text(0.6, H - 4.0, f"↑ {hi:.0f}°  /  ↓ {lo:.0f}°", fontsize=15, color="white", va="center")
+    ax.text(0.6, H - 4.0, f"↑ {t0(hi)}°  /  ↓ {t0(lo)}°", fontsize=15, color="white", va="center")
     ax.text(W - 0.5, H - 4.0, f"{d['generated']} 기준", fontsize=11, color="#eef3f8", va="center", ha="right")
 
     rainy = [i for i in range(n) if wetflag[i]]
     if rainy:
         k = "눈" if any(kinds[i] == "snow" for i in rainy) else "비"
-        summ = f"{ref['time'][rainy[0]]}~{ref['time'][rainy[-1]]} {k} 예상 · 최고 {hi:.0f}°C"
+        nxt = "내일 " if any(hours[j] < hours[0] for j in range(rainy[0] + 1)) else ""
+        summ = f"{nxt}{ref['time'][rainy[0]]}~{ref['time'][rainy[-1]]} {k} 예상 · 최고 {t0(hi)}°C"
     else:
-        summ = f"강수 없음 · 최고 {hi:.0f}°C, 최저 {lo:.0f}°C"
+        summ = f"강수 없음 · 최고 {t0(hi)}°C, 최저 {t0(lo)}°C"
     ax.text(0.6, H - 4.7, summ, fontsize=14, color="white", fontweight="bold", va="center")
 
     warn = [w for w in (d.get("warnings") or []) if L["name"].split()[0] in w or not any(
@@ -135,9 +141,9 @@ for li, L in enumerate(d["locations"]):
         for x, i in zip(xs, idx):
             ax.text(x, y0 + rh - 0.3, ref["time"][i], fontsize=11, color="white", ha="center", va="center")
             icon(ax, x, y0 + rh - 0.8, kinds[i], s=0.38, night=night[i])
-            ax.text(x, y0 + 1.33, f"{tmean[i]:.0f}°", fontsize=15, color="white", ha="center", va="center", fontweight="bold")
+            ax.text(x, y0 + 1.33, f"{t0(tmean[i])}°", fontsize=15, color="white", ha="center", va="center", fontweight="bold")
             if tmax[i] - tmin[i] >= 3:
-                ax.text(x + 0.27, y0 + 1.46, f"{tmin[i]:.0f}~{tmax[i]:.0f}", fontsize=6.5, color="#ffd28a", ha="left", va="center")
+                ax.text(x + 0.27, y0 + 1.46, f"{t0(tmin[i])}~{t0(tmax[i])}", fontsize=6.5, color="#ffd28a", ha="left", va="center")
         tl = tmean[idx]
         cy = y0 + 0.9 + (tl - lo) / max(hi - lo, 1) * 0.2
         ax.plot(xs, cy, color="#ffe28a", lw=1.8, zorder=3)
@@ -188,8 +194,8 @@ for li, L in enumerate(d["locations"]):
             sc = lambda t: x0 + (t - gl) / max(gh - gl, 1) * (x1 - x0)
             ax.plot([x0, x1], [yy, yy], color="white", alpha=0.18, lw=5, solid_capstyle="round", zorder=2)
             ax.plot([sc(WN[i]), sc(WX[i])], [yy, yy], color="#ffd28a", lw=5, solid_capstyle="round", zorder=3)
-            ax.text(x0 - 0.12, yy, f"{WN[i]:.0f}°", fontsize=11, color="#cfe3f5", va="center", ha="right")
-            ax.text(x1 + 0.12, yy, f"{WX[i]:.0f}°", fontsize=11, color="white", va="center", fontweight="bold")
+            ax.text(x0 - 0.12, yy, f"{t0(WN[i])}°", fontsize=11, color="#cfe3f5", va="center", ha="right")
+            ax.text(x1 + 0.12, yy, f"{t0(WX[i])}°", fontsize=11, color="white", va="center", fontweight="bold")
     ax.text(0.45, 0.62, f"기온 = {'·'.join(names)} 평균 (노란 숫자: 모델 간 범위, 차이 3℃↑)", fontsize=8.5, color="#e6edf3")
     ax.text(0.45, 0.38, "% = 모델 강수확률 평균(확률 없으면 비·눈 예측 모델 비율) · 아래줄 = 강수량 / 돌풍", fontsize=8.5, color="#e6edf3")
     ax.text(0.45, 0.14, "출처: Open-Meteo (ECMWF·GFS·ICON) · 기상청 자료 미사용", fontsize=8.5, color="#c9d6e2")

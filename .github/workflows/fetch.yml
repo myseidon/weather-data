@@ -2,7 +2,7 @@ name: fetch-forecast
 
 on:
   schedule:
-    - cron: "17 * * * *"
+    - cron: "45 * * * *"
   workflow_dispatch:
 
 permissions:
